@@ -40,6 +40,8 @@ class EvidenceEngine:
             if not matches:
                 raise FileNotFoundError(f"Contributor directory for {contributor_id} not found in {CONTRIBUTORS_DIR}")
             contrib_dir = matches[0]
+        else:
+            contrib_dir = Path(contrib_dir)
 
         logger.info(f"Analyzing contributor {contributor_id} at {contrib_dir}...")
         ref_manifest = self.ref_manager.load_manifest()
