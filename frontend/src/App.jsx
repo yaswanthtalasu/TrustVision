@@ -5,6 +5,7 @@ import DataIntake from './pages/DataIntake';
 import ContributorAnalysis from './pages/ContributorAnalysis';
 import Findings from './pages/Findings';
 import AssuranceReport from './pages/AssuranceReport';
+import ModelIntegrity from './pages/ModelIntegrity';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -20,6 +21,7 @@ export default function App() {
         {activeTab === 'analysis' && <ContributorAnalysis setActiveTab={setActiveTab} setSelectContributor={setSelectContributor} />}
         {activeTab === 'findings' && <Findings selectedContributor={selectedContributor} />}
         {activeTab === 'report' && <AssuranceReport />}
+        {activeTab === 'model_integrity' && <ModelIntegrity />}
       </main>
 
       <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
