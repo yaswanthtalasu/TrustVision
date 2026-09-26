@@ -6,8 +6,10 @@ import logging
 from backend.config import (
     SCORE_EXACT_DUP_WEIGHT, SCORE_NEAR_DUP_WEIGHT,
     SCORE_LABEL_ANOMALY_WEIGHT, SCORE_TRIGGER_WEIGHT,
-    SCORE_DISTRIBUTION_WEIGHT, QUARANTINE_SCORE_THRESHOLD,
-    REVIEW_SCORE_THRESHOLD
+    SCORE_DISTRIBUTION_WEIGHT, SATURATION_EXACT_DUP_PCT,
+    SATURATION_NEAR_DUP_PCT, SATURATION_LABEL_ANOMALY_PCT,
+    SATURATION_TRIGGER_PCT, SATURATION_DISTRIBUTION_DRIFT,
+    QUARANTINE_SCORE_THRESHOLD, REVIEW_SCORE_THRESHOLD
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -48,15 +50,15 @@ class ContributorAggregator:
         dist_score = dist_res.get("distribution_difference_score", 0.0)
         dist_shift = dist_res.get("shift_detected", False)
 
-        # 2. Calculate dynamic composite risk score
-        risk_score = (
-            (exact_pct * SCORE_EXACT_DUP_WEIGHT / 100.0) +
-            (near_pct * SCORE_NEAR_DUP_WEIGHT / 100.0) +
-            (label_pct * SCORE_LABEL_ANOMALY_WEIGHT / 100.0) +
-            (trig_pct * SCORE_TRIGGER_WEIGHT / 100.0) +
-            (dist_score * SCORE_DISTRIBUTION_WEIGHT / 100.0)
-        )
-        risk_score = min(round(float(risk_score * 10.0), 2), 100.0)  # Scale to 0-100 range and cap at 100
+        # 2. Calculate dynamic composite risk score (strictly bounded 0.0 - 100.0)
+        exact_points = min(1.0, exact_pct / SATURATION_EXACT_DUP_PCT) * SCORE_EXACT_DUP_WEIGHT
+        near_points = min(1.0, near_pct / SATURATION_NEAR_DUP_PCT) * SCORE_NEAR_DUP_WEIGHT
+        label_points = min(1.0, label_pct / SATURATION_LABEL_ANOMALY_PCT) * SCORE_LABEL_ANOMALY_WEIGHT
+        trig_points = min(1.0, trig_pct / SATURATION_TRIGGER_PCT) * SCORE_TRIGGER_WEIGHT
+        dist_points = min(1.0, dist_score / SATURATION_DISTRIBUTION_DRIFT) * SCORE_DISTRIBUTION_WEIGHT
+
+        risk_score = round(float(exact_points + near_points + label_points + trig_points + dist_points), 2)
+        risk_score = min(max(risk_score, 0.0), 100.0)
 
         # 3. Transparent Rule-Based Decision Logic
         reasons = []

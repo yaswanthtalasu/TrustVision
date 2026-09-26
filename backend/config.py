@@ -44,13 +44,19 @@ TRIGGER_LOCATION = (2, 2)  # Top-left offset
 
 DISTRIBUTION_CHI_SQUARE_P_VAL = 0.01  # p-value threshold for distribution shift
 
-# Decision Thresholds for Aggregator
-# Risk score calculation weights
-SCORE_EXACT_DUP_WEIGHT = 20.0
-SCORE_NEAR_DUP_WEIGHT = 15.0
-SCORE_LABEL_ANOMALY_WEIGHT = 35.0
-SCORE_TRIGGER_WEIGHT = 40.0
-SCORE_DISTRIBUTION_WEIGHT = 15.0
+# Decision Thresholds & Point Weights for Aggregator (Sum = 100 max points)
+SCORE_TRIGGER_WEIGHT = 30.0       # Max 30 points (Critical security risk)
+SCORE_LABEL_ANOMALY_WEIGHT = 25.0 # Max 25 points (Data quality corruption)
+SCORE_EXACT_DUP_WEIGHT = 15.0     # Max 15 points (Duplicate flooding)
+SCORE_NEAR_DUP_WEIGHT = 15.0      # Max 15 points (Augmentation redundancy)
+SCORE_DISTRIBUTION_WEIGHT = 15.0  # Max 15 points (Class distribution drift)
+
+# Saturation thresholds (% affected that yields maximum points for that category)
+SATURATION_EXACT_DUP_PCT = 10.0      # 10% duplicates yields max 15 pts
+SATURATION_NEAR_DUP_PCT = 10.0       # 10% near-duplicates yields max 15 pts
+SATURATION_LABEL_ANOMALY_PCT = 10.0  # 10% label anomalies yields max 25 pts
+SATURATION_TRIGGER_PCT = 5.0         # 5% synthetic triggers yields max 30 pts
+SATURATION_DISTRIBUTION_DRIFT = 30.0 # 30% class shift yields max 15 pts
 
 QUARANTINE_SCORE_THRESHOLD = 30.0
 REVIEW_SCORE_THRESHOLD = 10.0
