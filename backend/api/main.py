@@ -110,7 +110,8 @@ async def upload_contributor(
     file: UploadFile = File(...)
 ):
     """
-    Manually upload a ZIP file containing images and an optional manifest for a contributor.
+    Manually upload a ZIP file or image file containing contributor data.
+    Handles BadZipFile central directory offsets and direct image uploads safely.
     """
     try:
         import zipfile
@@ -119,43 +120,77 @@ async def upload_contributor(
         contrib_dir = CONTRIBUTORS_DIR / contributor_id
         if contrib_dir.exists():
             shutil.rmtree(contrib_dir)
-        contrib_dir.mkdir(parents=True)
+        contrib_dir.mkdir(parents=True, exist_ok=True)
 
-        zip_path = contrib_dir / "upload.zip"
-        content = await file.read()
+        zip_path = contrib_dir / file.filename
         with open(zip_path, "wb") as buffer:
-            buffer.write(content)
+            shutil.copyfileobj(file.file, buffer)
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(contrib_dir)
-            
-        zip_path.unlink()
+        extracted = False
+
+        # Strategy 1: Standard zipfile extraction
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(contrib_dir)
+            extracted = True
+        except (zipfile.BadZipFile, Exception) as ze:
+            logger.warning(f"Standard zipfile extraction failed for {file.filename}: {ze}. Attempting fallback unpack...")
+            # Strategy 2: shutil.unpack_archive fallback
+            try:
+                shutil.unpack_archive(str(zip_path), str(contrib_dir))
+                extracted = True
+            except Exception as unpack_err:
+                logger.warning(f"shutil.unpack_archive failed: {unpack_err}")
+
+        # If not a zip archive, check if a single direct image file was uploaded
+        if not extracted:
+            ext = Path(file.filename).suffix.lower()
+            if ext in {".png", ".jpg", ".jpeg", ".bmp", ".webp"}:
+                images_dir = contrib_dir / "images"
+                images_dir.mkdir(parents=True, exist_ok=True)
+                dest_img = images_dir / file.filename
+                shutil.move(str(zip_path), str(dest_img))
+                extracted = True
+            else:
+                if zip_path.exists():
+                    zip_path.unlink()
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Uploaded file '{file.filename}' is corrupt or not a valid ZIP archive (Bad offset for central directory). Please ensure it is a valid .zip file."
+                )
+
+        if zip_path.exists():
+            zip_path.unlink()
 
         # Handle nested folder if zip contains a single top-level folder
-        items = list(contrib_dir.iterdir())
-        if len(items) == 1 and items[0].is_dir():
+        items = [i for i in contrib_dir.iterdir() if i.is_dir()]
+        if len(items) == 1 and items[0].name != "images":
             inner_dir = items[0]
             for item in inner_dir.iterdir():
                 shutil.move(str(item), str(contrib_dir))
             inner_dir.rmdir()
 
+        m = manifest_mgr.create_contributor_manifest(contributor_id, contrib_dir)
+
         meta = {
             "contributor_id": contributor_id,
+            "dataset_name": f"Manual_{contributor_id}",
             "type": "MANUAL",
             "description": description,
-            "samples": len(list(contrib_dir.glob("*.*")))
+            "sample_count": m.get("total_samples", len(list(contrib_dir.rglob("*.png"))))
         }
-        with open(contrib_dir / "metadata.json", "w") as f:
-            json.dump(meta, f)
-
-        m = manifest_mgr.create_contributor_manifest(contributor_id, contrib_dir)
+        with open(contrib_dir / "metadata.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
 
         return {
             "status": "success",
-            "message": f"Contributor {contributor_id} uploaded successfully.",
+            "message": f"Contributor {contributor_id} uploaded successfully with {meta['sample_count']} samples.",
             "contributor_id": contributor_id,
+            "sample_count": meta['sample_count'],
             "crypto_root_hash": m.get("dataset_root_hash")
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error uploading contributor: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -265,11 +300,17 @@ def get_results(contributor_id: str):
     ev_file = EVIDENCE_DIR / f"{contributor_id}_evidence.json"
 
     if not res_file.exists() or not ev_file.exists():
-        # Trigger analysis automatically if not run yet
         analyze_contributor(contributor_id)
 
     with open(res_file, "r", encoding="utf-8") as f:
         evaluation = json.load(f)
+
+    # Automatically re-analyze if evaluation contains a stale uncapped score > 100
+    if evaluation.get("risk_score", 0) > 100.0:
+        analyze_contributor(contributor_id)
+        with open(res_file, "r", encoding="utf-8") as f:
+            evaluation = json.load(f)
+
     with open(ev_file, "r", encoding="utf-8") as f:
         evidence = json.load(f)
 
@@ -289,7 +330,16 @@ def get_report(contributor_id: str):
         analyze_all()
 
     with open(json_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        report = json.load(f)
+
+    # Check if any contributor in report has stale risk score > 100
+    has_stale = any(c.get("risk_score", 0) > 100.0 for c in report.get("contributors", []))
+    if has_stale:
+        analyze_all()
+        with open(json_path, "r", encoding="utf-8") as f:
+            report = json.load(f)
+
+    return report
 
 
 @app.get("/reports/view/html", response_class=HTMLResponse)
