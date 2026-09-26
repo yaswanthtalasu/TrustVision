@@ -16,6 +16,7 @@ from backend.hashing import ManifestManager
 from backend.evidence.engine import EvidenceEngine
 from backend.contributor_analysis.aggregator import ContributorAggregator
 from backend.reports.generator import ReportGenerator
+from backend.model_integrity.api import router as model_integrity_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TrustVision.API")
@@ -25,6 +26,9 @@ app = FastAPI(
     description="Offline-capable Data Integrity Assurance API for Computer Vision Pipelines",
     version="1.0.0"
 )
+
+# Include Model Integrity router
+app.include_router(model_integrity_router)
 
 # Enable CORS for React Frontend
 app.add_middleware(

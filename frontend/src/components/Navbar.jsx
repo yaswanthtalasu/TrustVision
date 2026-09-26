@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Database, Search, FileText, LayoutDashboard, Cpu } from 'lucide-react';
+import { ShieldCheck, Database, Search, FileText, LayoutDashboard, Cpu, Lock } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const navItems = [
@@ -8,6 +8,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
     { id: 'analysis', label: 'Contributor Analysis', icon: Cpu },
     { id: 'findings', label: 'Findings Browser', icon: Search },
     { id: 'report', label: 'Assurance Report', icon: FileText },
+    { id: 'model_integrity', label: 'Model Integrity', icon: Lock },
   ];
 
   return (
