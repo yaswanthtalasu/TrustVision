@@ -1,0 +1,14 @@
+{
+  "contributor_id": "C4",
+  "dataset_name": "CIFAR10_C4_Clean",
+  "source_dataset": "CIFAR-10",
+  "sample_count": 1000,
+  "seed": 42,
+  "manipulation": {
+    "duplicate_flooding": false,
+    "near_duplicates": false,
+    "label_anomalies": false,
+    "controlled_trigger": false,
+    "distribution_shift": false
+  }
+}

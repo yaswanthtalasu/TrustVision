@@ -1,0 +1,14 @@
+{
+  "contributor_id": "C3",
+  "dataset_name": "CIFAR10_C3_Risky",
+  "source_dataset": "CIFAR-10",
+  "sample_count": 1260,
+  "seed": 42,
+  "manipulation": {
+    "duplicate_flooding": true,
+    "near_duplicates": true,
+    "label_anomalies": true,
+    "controlled_trigger": true,
+    "distribution_shift": true
+  }
+}
