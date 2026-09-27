@@ -9,6 +9,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
     { id: 'findings', label: 'Findings Browser', icon: Search },
     { id: 'report', label: 'Assurance Report', icon: FileText },
     { id: 'model_integrity', label: 'Model Integrity', icon: Lock },
+    { id: 'inference_integrity', label: 'Inference Integrity', icon: ShieldCheck },
   ];
 
   return (
