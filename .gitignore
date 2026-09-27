@@ -34,3 +34,20 @@ data/generated/
 Thumbs.db
 .idea/
 .vscode/
+
+data/reference/cifar10/cifar-10-python.tar.gz
+data/reference/cifar10/cifar-10-batches-py/
+data/contributors/
+data/generated/
+
+*.pth
+*.pt
+*.onnx
+
+# Keys
+data/keys/*.priv
+
+# Inference/temp
+tmp_model.bin
+data/inference_records.json
+TrustVision/

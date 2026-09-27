@@ -44,13 +44,45 @@ pip install -r requirements.txt
 
 ### 2. Run End-to-End Demonstration
 
-Execute the single-command workflow script:
+The demonstration executes the pipeline across 10 distinct phases automatically:
+- **Phase 1**: Reference Dataset Management (CIFAR-10)
+- **Phase 2 & 3**: Generating Contributor Submissions (C1, C2, C3, C4)
+- **Phase 4, 5 & 6**: Executing Data Integrity Detectors across Submissions
+- **Phase 7**: Detailed Evidence Breakdown for Contributor C3 (Risky)
+- **Phase 8 & 9**: Pipeline Evidence Aggregation & Decision Matrix
+- **Phase 10**: Assurance Report Generation
+
+Execute the single-command workflow script to run all phases:
 
 ```bash
 python scripts/run_demo.py
 ```
 
-### 3. Start Backend API & Frontend Dashboard
+### 3. Run Model Integrity Phase
+
+The Model Integrity verification allows you to verify if a submitted model matches a trusted hash and performs behavioral analysis to detect tampering.
+
+1. **Generate Demo Models (Clean and Tampered):**
+   ```bash
+   python scripts/setup_behavioral_demo.py
+   ```
+   This will create `demo/clean/` and `demo/tampered/` directories containing `company_model.pth` and `company_model.sha256`.
+
+2. **Test via UI:**
+   Start the backend and frontend (see step 5), then navigate to the **Model Integrity** page in the dashboard to test the clean vs tampered models.
+
+### 4. Run Inference Integrity Phase
+
+The Inference Integrity phase secures individual model predictions by issuing cryptographically signed inference records.
+
+1. **Test via UI:**
+   Start the backend and frontend (see step 5), then navigate to the **Inference Integrity** page.
+2. **Run and Verify:**
+   - Upload an image to generate a secure inference record.
+   - Test "Verify Integrity" to ensure it is valid.
+   - Use "Simulate Tampering" or "Simulate Replay Attack" to test detection capabilities.
+
+### 5. Start Backend API & Frontend Dashboard
 
 Start FastAPI Backend:
 
