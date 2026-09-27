@@ -5,10 +5,6 @@ from backend.model_integrity.hash_utils import calculate_sha256
 import tempfile
 import hashlib
 import os
-from fastapi.testclient import TestClient
-from backend.api.main import app
-
-client = TestClient(app)
 
 @pytest.fixture
 def temp_workspace():
@@ -78,27 +74,3 @@ def test_large_file_hashing(temp_workspace):
     expected = sha256.hexdigest()
     
     assert computed == expected
-
-def test_verify_full_endpoint_clean_model(temp_workspace):
-    # This requires a dummy model that can load via load_resnet18_model, which is tricky without real weights.
-    # But if we just pass a random file, it will fail artifact (if hash mismatches) or pass artifact and fail behavioral loading.
-    # We will test the failure mode.
-    model_path = temp_workspace / "dummy.pth"
-    hash_path = temp_workspace / "dummy.sha256"
-    
-    model_path.write_bytes(b"bad_model_data")
-    hash_path.write_text(hashlib.sha256(b"bad_model_data").hexdigest())
-    
-    with open(model_path, "rb") as mf, open(hash_path, "rb") as hf:
-        response = client.post(
-            "/api/model-integrity/verify-full",
-            files={"model_file": mf, "hash_file": hf}
-        )
-        
-    assert response.status_code == 200
-    data = response.json()
-    assert data["artifact"]["status"] == "PASS"
-    # Behavioral should fail (None) because it's not a real model
-    assert data["behavioral"] is None
-    # Overall should be REVIEW
-    assert data["overall_disposition"] == "REVIEW"

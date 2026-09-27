@@ -24,11 +24,3 @@ class BehavioralAnalysisResult(BaseModel):
     timestamp: str
     limitations: list
 
-class FullIntegrityResult(BaseModel):
-    verification_id: str
-    model_filename: str
-    artifact: VerificationResult
-    behavioral: Optional[BehavioralAnalysisResult] = None
-    overall_disposition: str
-    timestamp: str
-

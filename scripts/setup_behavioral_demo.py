@@ -39,10 +39,8 @@ def setup_demo():
     # 3. Create modified model (modify the fully connected layer slightly)
     # We change weights in a way that affects predictions.
     with torch.no_grad():
-        # Add random noise to weights to force behavioral deviation
-        model.fc.weight.data += torch.randn_like(model.fc.weight.data) * 2.0
-        # Alternatively, target a specific class to guarantee deviation
-        model.fc.weight.data[0] += 5.0
+        model.fc.weight.data += 5.0  # Large perturbation to force behavioral deviation
+        model.fc.bias.data += 5.0
         
     modified_model_path = MODIFIED_DIR / "company_model.pth"
     torch.save(model.state_dict(), modified_model_path)

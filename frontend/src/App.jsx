@@ -6,7 +6,6 @@ import ContributorAnalysis from './pages/ContributorAnalysis';
 import Findings from './pages/Findings';
 import AssuranceReport from './pages/AssuranceReport';
 import ModelIntegrity from './pages/ModelIntegrity';
-import InferenceIntegrity from './pages/InferenceIntegrity';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,7 +22,6 @@ export default function App() {
         {activeTab === 'findings' && <Findings selectedContributor={selectedContributor} />}
         {activeTab === 'report' && <AssuranceReport />}
         {activeTab === 'model_integrity' && <ModelIntegrity />}
-        {activeTab === 'inference_integrity' && <InferenceIntegrity />}
       </main>
 
       <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">

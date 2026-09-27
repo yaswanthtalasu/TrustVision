@@ -39,7 +39,7 @@ def generate_demos():
     print(f"Original Hash: {clean_hash}")
     
     # 3. Create tampered model (modify slightly)
-    model.linear.bias.data[0] += 10.0 # Non-uniform perturbation to change argmax
+    model.linear.bias.data += 0.01
     tampered_model_path = TAMPERED_DIR / "company_model.pth"
     torch.save(model.state_dict(), tampered_model_path)
     
